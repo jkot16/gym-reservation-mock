@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gym Reservation System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Inter", "system-ui", "sans-serif"]
+          },
+          boxShadow: {
+            glow: "0 0 50px rgba(56, 189, 248, 0.25)",
+            greenGlow: "0 0 50px rgba(16, 185, 129, 0.22)"
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    :root {
+      --bg: #020617;
+      --panel: rgba(15, 23, 42, 0.78);
+      --panel-strong: rgba(15, 23, 42, 0.92);
+      --border: rgba(148, 163, 184, 0.18);
+      --blue: #38bdf8;
+      --green: #34d399;
+      --purple: #a78bfa;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(56, 189, 248, 0.22), transparent 28%),
+        radial-gradient(circle at 90% 20%, rgba(167, 139, 250, 0.20), transparent 26%),
+        radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.16), transparent 28%),
+        linear-gradient(135deg, #020617 0%, #050816 45%, #020617 100%);
+      color: #f8fafc;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(148, 163, 184, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.045) 1px, transparent 1px);
+      background-size: 46px 46px;
+      mask-image: radial-gradient(circle at center, black, transparent 78%);
+      opacity: 0.55;
+    }
+
+    .orb {
+      position: fixed;
+      width: 360px;
+      height: 360px;
+      border-radius: 999px;
+      filter: blur(70px);
+      opacity: 0.28;
+      pointer-events: none;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    .orb-blue {
+      background: #38bdf8;
+      left: -120px;
+      top: 90px;
+    }
+
+    .orb-purple {
+      background: #8b5cf6;
+      right: -140px;
+      top: 120px;
+      animation-delay: -3s;
+    }
+
+    .orb-green {
+      background: #10b981;
+      left: 45%;
+      bottom: -180px;
+      animation-delay: -5s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-24px) scale(1.04); }
+    }
+
+    .glass {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(22px);
+      box-shadow: 0 24px 90px rgba(0, 0, 0, 0.32);
+    }
+
+    .glass-strong {
+      background: var(--panel-strong);
+      border: 1px solid rgba(148, 163, 184, 0.20);
+      backdrop-filter: blur(26px);
+      box-shadow: 0 30px 120px rgba(0, 0, 0, 0.38);
+    }
+
+    .gradient-border {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .gradient-border::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.65), rgba(167, 139, 250, 0.35), rgba(52, 211, 153, 0.45));
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .fade {
+      animation: fadeIn 0.32s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.99); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .pulse-line {
+      background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.9), transparent);
+      animation: pulseLine 2.4s linear infinite;
+    }
+
+    @keyframes pulseLine {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .neon-text {
+      text-shadow: 0 0 24px rgba(56, 189, 248, 0.35);
+    }
+
+    .scan-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .scan-card::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 70%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+      animation: scan 4s ease-in-out infinite;
+    }
+
+    @keyframes scan {
+      0%, 70% { left: -100%; }
+      100% { left: 130%; }
+    }
+  </style>
+</head>
+
+<body class="font-sans">
+  <div class="orb orb-blue"></div>
+  <div class="orb orb-purple"></div>
+  <div class="orb orb-green"></div>
+
+  <div id="app"></div>
+
+  <script>
+    const initialMembers = {
+      M001: {
+        id: "M001",
+        name: "John Carter",
+        membershipActive: true,
+        plan: "Premium",
+        reservations: []
+      },
+      M002: {
+        id: "M002",
+        name: "Anna Nowak",
+        membershipActive: false,
+        plan: "Inactive",
+        reservations: []
+      }
+    };
+
+    const sessions = [
+      {
+        id: "S001",
+        title: "Boxing Fundamentals",
+        type: "Boxing",
+        date: "2026-05-20",
+        time: "18:00",
+        coach: "Coach Adam",
+        places: 5,
+        intensity: "Medium",
+        description: "Technical boxing class focused on footwork, guard, basic combinations and controlled conditioning."
+      },
+      {
+        id: "S002",
+        title: "Strength Training",
+        type: "Strength",
+        date: "2026-05-21",
+        time: "17:00",
+        coach: "Coach Marta",
+        places: 3,
+        intensity: "High",
+        description: "Full-body strength session focused on safe compound movements, stability and strength development."
+      },
+      {
+        id: "S003",
+        title: "Mobility & Recovery",
+        type: "Recovery",
+        date: "2026-05-22",
+        time: "19:00",
+        coach: "Coach Filip",
+        places: 8,
+        intensity: "Low",
+        description: "Recovery session focused on mobility, stretching, breathing and injury prevention."
+      },
+      {
+        id: "S004",
+        title: "Conditioning Circuit",
+        type: "Conditioning",
+        date: "2026-05-23",
+        time: "16:30",
+        coach: "Coach Olivia",
+        places: 4,
+        intensity: "High",
+        description: "Fast-paced circuit training for endurance, strength endurance and general athletic conditioning."
+      }
+    ];
+
+    let members = structuredClone(initialMembers);
+
+    let state = {
+      screen: "login",
+      member: null,
+      memberId: "",
+      selectedSession: null,
+      reservation: null,
+      endMessage: "",
+      justConfirmed: false
+    };
+
+    const app = document.getElementById("app");
+
+    function resetDemo() {
+      members = structuredClone(initialMembers);
+
+      state = {
+        screen: "login",
+        member: null,
+        memberId: "",
+        selectedSession: null,
+        reservation: null,
+        endMessage: "",
+        justConfirmed: false
+      };
+
+      render();
+    }
+
+    function goToLogin() {
+      state.screen = "login";
+      state.justConfirmed = false;
+      render();
+    }
+
+    function setScreen(screen) {
+      state.screen = screen;
+      render();
+    }
+
+    function validateMember() {
+      const input = document.getElementById("memberIdInput").value.trim().toUpperCase();
+      state.memberId = input;
+      state.justConfirmed = false;
+
+      if (!members[input]) {
+        state.screen = "invalidId";
+        render();
+        return;
+      }
+
+      state.member = members[input];
+
+      if (!state.member.membershipActive) {
+        state.screen = "inactiveMembership";
+      } else {
+        state.screen = "sessions";
+      }
+
+      render();
+    }
+
+    function quickLogin(id) {
+      document.getElementById("memberIdInput").value = id;
+      validateMember();
+    }
+
+    function goToPayment() {
+      state.screen = "payment";
+      render();
+    }
+
+    function activateMembership() {
+      state.member.membershipActive = true;
+      state.member.plan = "Premium";
+      members[state.member.id] = state.member;
+
+      state.screen = "sessions";
+      render();
+    }
+
+    function selectSession(sessionId) {
+      state.selectedSession = sessions.find(session => session.id === sessionId);
+      state.screen = "details";
+      state.justConfirmed = false;
+      render();
+    }
+
+    function returnToSessions() {
+      state.selectedSession = null;
+      state.screen = "sessions";
+      state.justConfirmed = false;
+      render();
+    }
+
+    function confirmReservation() {
+      const selected = state.selectedSession;
+
+      state.reservation = {
+        id: "R-" + Math.floor(Math.random() * 90000 + 10000),
+        title: selected.title,
+        type: selected.type,
+        date: selected.date,
+        time: selected.time,
+        coach: selected.coach
+      };
+
+      state.member.reservations.push(state.reservation);
+      members[state.member.id] = state.member;
+
+      state.selectedSession = null;
+      state.justConfirmed = true;
+      state.screen = "sessions";
+      render();
+    }
+
+    function endProcess(message) {
+      state.endMessage = message;
+      state.screen = "end";
+      render();
+    }
+
+    function render() {
+      if (state.screen === "login") renderLogin();
+      if (state.screen === "invalidId") renderInvalidId();
+      if (state.screen === "inactiveMembership") renderInactiveMembership();
+      if (state.screen === "payment") renderPayment();
+      if (state.screen === "sessions") renderSessions();
+      if (state.screen === "details") renderDetails();
+      if (state.screen === "end") renderEnd();
+    }
+
+    function shell(content, currentStep = 1) {
+      app.innerHTML = `
+        <div class="relative min-h-screen p-4 md:p-8 lg:p-10">
+          <div class="max-w-7xl mx-auto relative z-10">
+            <header class="mb-8 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+              <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-400/10 border border-cyan-300/20 text-cyan-200 text-xs mb-4">
+                  <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                  </span>
+                  BPMN-based interactive mock website
+                </div>
+
+                <h1 class="text-4xl md:text-6xl font-black tracking-tight neon-text">
+                  Gym Reservation System
+                </h1>
+
+                <p class="text-slate-400 mt-3 max-w-3xl">
+                  Futuristic self-service reservation portal that replaces the manual receptionist-based flow with automated member validation, membership checking and reservation confirmation.
+                </p>
+              </div>
+
+              <div class="flex flex-wrap gap-3">
+                <button onclick="resetDemo()" class="px-4 py-2 rounded-2xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-sm transition">
+                  Reset demo
+                </button>
+
+                <div class="px-4 py-2 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 text-emerald-200 text-sm">
+                  Online process simulation
+                </div>
+              </div>
+            </header>
+
+            ${state.member ? memberHeader() : ""}
+
+            <div class="grid grid-cols-1 lg:grid-cols-[330px_1fr] gap-6">
+              ${sidebar(currentStep)}
+              <main class="glass-strong gradient-border rounded-[2rem] p-5 md:p-8 min-h-[620px] fade">
+                ${content}
+              </main>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function memberHeader() {
+      const status = state.member.membershipActive
+        ? `<span class="px-3 py-1 rounded-full bg-emerald-400/10 border border-emerald-300/20 text-emerald-300 text-xs">ACTIVE MEMBERSHIP</span>`
+        : `<span class="px-3 py-1 rounded-full bg-amber-400/10 border border-amber-300/20 text-amber-300 text-xs">INACTIVE MEMBERSHIP</span>`;
+
+      return `
+        <section class="glass rounded-[2rem] p-5 mb-6">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400/30 to-violet-500/30 border border-cyan-200/20 flex items-center justify-center shadow-glow">
+                <span class="text-xl font-bold">${state.member.name.charAt(0)}</span>
+              </div>
+
+              <div>
+                <p class="text-xs text-slate-500 uppercase tracking-[0.22em]">Member account</p>
+                <h2 class="text-2xl font-bold">${state.member.name}</h2>
+                <p class="text-slate-500 text-sm">MemberID: ${state.member.id}</p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              ${status}
+              <span class="px-3 py-1 rounded-full bg-cyan-400/10 border border-cyan-300/20 text-cyan-300 text-xs">
+                PLAN: ${state.member.plan}
+              </span>
+              <span class="px-3 py-1 rounded-full bg-violet-400/10 border border-violet-300/20 text-violet-300 text-xs">
+                RESERVATIONS: ${state.member.reservations.length}
+              </span>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function sidebar(currentStep) {
+      const steps = [
+        "Open reservation portal",
+        "Enter MemberID",
+        "Validate member data",
+        "Check membership status",
+        "Buy membership decision",
+        "Display available sessions",
+        "Select training session",
+        "Reservation confirmed?",
+        "Register reservation",
+        "Send notification",
+        "Display in account"
+      ];
+
+      return `
+        <aside class="glass rounded-[2rem] p-5 h-fit">
+          <div class="flex items-center justify-between mb-5">
+            <h2 class="font-bold">Improved BPMN flow</h2>
+            <span class="text-xs text-cyan-300 border border-cyan-300/20 bg-cyan-400/10 rounded-full px-2 py-1">
+              ${currentStep}/11
+            </span>
+          </div>
+
+          <div class="space-y-3">
+            ${steps.map((step, index) => {
+              const stepNumber = index + 1;
+              const isActive = currentStep === stepNumber;
+              const isPast = currentStep > stepNumber;
+
+              return `
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-2xl flex items-center justify-center text-sm font-bold border transition
+                    ${isActive
+                      ? "bg-cyan-500 text-white border-cyan-300 shadow-glow"
+                      : isPast
+                        ? "bg-emerald-500/15 text-emerald-300 border-emerald-300/20"
+                        : "bg-slate-950/70 text-slate-500 border-slate-700"}">
+                    ${isPast ? "✓" : stepNumber}
+                  </div>
+
+                  <span class="text-sm ${isActive ? "text-cyan-200" : isPast ? "text-slate-300" : "text-slate-500"}">
+                    ${step}
+                  </span>
+                </div>
+              `;
+            }).join("")}
+          </div>
+
+          <div class="mt-6 pt-5 border-t border-slate-700">
+            <p class="text-xs text-slate-500 mb-3 uppercase tracking-[0.18em]">Test Member IDs</p>
+
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between">
+                <span class="text-slate-300">M001</span>
+                <span class="text-emerald-300">active</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-300">M002</span>
+                <span class="text-amber-300">inactive</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-300">Other</span>
+                <span class="text-red-300">invalid</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+      `;
+    }
+
+    function renderLogin() {
+      shell(`
+        <div class="max-w-3xl">
+          <div class="mb-8">
+            <p class="text-cyan-300 text-sm font-semibold mb-2">Start — Member wants to reserve a training session online</p>
+            <h2 class="text-4xl md:text-5xl font-black mb-4">Enter MemberID</h2>
+            <p class="text-slate-400 max-w-2xl">
+              The member opens the reservation portal and enters MemberID. The system then validates member data and checks membership status.
+            </p>
+          </div>
+
+          <div class="glass scan-card rounded-[2rem] p-6 max-w-xl">
+            <label class="block text-sm text-slate-400 mb-2">MemberID</label>
+
+            <input
+              id="memberIdInput"
+              placeholder="Try M001 or M002"
+              class="w-full px-5 py-4 rounded-2xl bg-slate-950/80 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-100 placeholder:text-slate-600"
+            />
+
+            <button onclick="validateMember()"
+              class="mt-4 w-full px-5 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 transition font-bold shadow-glow">
+              Continue
+            </button>
+          </div>
+
+          <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
+            <button onclick="quickLogin('M001')"
+              class="group p-5 rounded-[1.5rem] bg-emerald-500/10 border border-emerald-400/20 text-left hover:bg-emerald-500/15 transition">
+              <p class="font-bold text-emerald-200 group-hover:text-emerald-100">Use active member</p>
+              <p class="text-sm text-slate-400 mt-1">M001 — goes directly to available sessions</p>
+            </button>
+
+            <button onclick="quickLogin('M002')"
+              class="group p-5 rounded-[1.5rem] bg-amber-500/10 border border-amber-400/20 text-left hover:bg-amber-500/15 transition">
+              <p class="font-bold text-amber-200 group-hover:text-amber-100">Use inactive member</p>
+              <p class="text-sm text-slate-400 mt-1">M002 — goes through membership renewal</p>
+            </button>
+          </div>
+        </div>
+      `, 2);
+    }
+
+    function renderInvalidId() {
+      shell(`
+        <div class="max-w-2xl">
+          <div class="w-16 h-16 rounded-3xl bg-red-500/15 border border-red-400/20 flex items-center justify-center text-3xl mb-6 shadow-glow">
+            !
+          </div>
+
+          <p class="text-red-300 text-sm font-semibold mb-2">Gateway — MemberID valid? No</p>
+          <h2 class="text-4xl font-black mb-4">Invalid MemberID</h2>
+
+          <p class="text-slate-400 mb-8">
+            The system displays invalid MemberID message. The member must enter MemberID again.
+          </p>
+
+          <button onclick="goToLogin()"
+            class="px-6 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 transition font-bold shadow-glow">
+            Enter MemberID again
+          </button>
+        </div>
+      `, 3);
+    }
+
+    function renderInactiveMembership() {
+      shell(`
+        <div class="max-w-3xl">
+          <div class="w-16 h-16 rounded-3xl bg-amber-500/15 border border-amber-400/20 flex items-center justify-center text-3xl mb-6">
+            !
+          </div>
+
+          <p class="text-amber-300 text-sm font-semibold mb-2">Gateway — Membership active? No</p>
+          <h2 class="text-4xl font-black mb-4">Inactive membership</h2>
+
+          <p class="text-slate-400 mb-8 max-w-2xl">
+            The system displays inactive membership message and shows membership renewal option.
+          </p>
+
+          <div class="glass rounded-[2rem] p-6 mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+              <div>
+                <h3 class="text-2xl font-bold mb-2">Buy membership?</h3>
+                <p class="text-slate-400">
+                  If the member chooses no, the process ends and reservation is not created.
+                  If the member chooses yes, the member pays for membership.
+                </p>
+              </div>
+
+              <div class="text-right">
+                <p class="text-slate-500 text-sm">Premium access</p>
+                <p class="text-3xl font-black text-emerald-300">199 PLN</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-3">
+            <button onclick="goToPayment()"
+              class="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 transition font-bold shadow-greenGlow">
+              Yes, buy membership
+            </button>
+
+            <button onclick="endProcess('Reservation was not created because membership was not bought or renewed.')"
+              class="px-6 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-700 transition font-bold">
+              No, end process
+            </button>
+          </div>
+        </div>
+      `, 5);
+    }
+
+    function renderPayment() {
+      shell(`
+        <div class="max-w-3xl">
+          <p class="text-emerald-300 text-sm font-semibold mb-2">Member pays for membership</p>
+          <h2 class="text-4xl font-black mb-4">Payment authorization</h2>
+
+          <p class="text-slate-400 mb-8 max-w-2xl">
+            This mock screen represents the payment step. After payment, the system activates renewed membership and continues to available training sessions.
+          </p>
+
+          <div class="glass rounded-[2rem] p-6 mb-6 max-w-xl">
+            <div class="flex justify-between items-center mb-5">
+              <div>
+                <p class="font-bold">Premium membership</p>
+                <p class="text-sm text-slate-500">Online reservation access</p>
+              </div>
+              <span class="text-3xl font-black text-emerald-300">199 PLN</span>
+            </div>
+
+            <div class="h-2 rounded-full bg-slate-950 overflow-hidden">
+              <div class="h-full w-4/5 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400"></div>
+            </div>
+
+            <p class="text-xs text-slate-500 mt-4">
+              Payment simulation only — no real transaction is performed.
+            </p>
+          </div>
+
+          <button onclick="activateMembership()"
+            class="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 transition font-bold shadow-greenGlow">
+            Pay and continue
+          </button>
+        </div>
+      `, 5);
+    }
+
+    function renderSessions() {
+      shell(`
+        <div>
+          ${state.justConfirmed ? successBanner() : ""}
+
+          <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-5 mb-8">
+            <div>
+              <p class="text-cyan-300 text-sm font-semibold mb-2">System displays available training sessions</p>
+              <h2 class="text-4xl font-black mb-3">Available sessions</h2>
+              <p class="text-slate-400 max-w-2xl">
+                The member selects a training session from the list displayed by the system.
+              </p>
+            </div>
+
+            <div class="glass rounded-2xl px-4 py-3">
+              <p class="text-xs text-slate-500 uppercase tracking-[0.18em]">Account status</p>
+              <p class="text-emerald-300 font-bold">Ready to reserve</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+            ${sessions.map(sessionCard).join("")}
+          </div>
+
+          ${reservationsPanel()}
+        </div>
+      `, state.justConfirmed ? 11 : 6);
+    }
+
+    function successBanner() {
+      return `
+        <div class="mb-8 rounded-[2rem] border border-emerald-300/25 bg-emerald-400/10 p-6 shadow-greenGlow fade">
+          <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div>
+              <p class="text-emerald-300 text-sm font-semibold mb-2">End — Reservation confirmed</p>
+              <h3 class="text-2xl font-black">Confirmation notification sent</h3>
+              <p class="text-slate-300 mt-2">
+                The system registered the reservation, sent a confirmation notification and displayed it in the member account.
+              </p>
+            </div>
+
+            <span class="px-3 py-1 rounded-full bg-emerald-400/10 border border-emerald-300/20 text-emerald-300 text-xs w-fit">
+              BPMN completed
+            </span>
+          </div>
+        </div>
+      `;
+    }
+
+    function sessionCard(session) {
+      return `
+        <article class="glass rounded-[2rem] p-5 hover:border-cyan-300/35 hover:shadow-glow transition group">
+          <div class="flex items-start justify-between gap-4 mb-5">
+            <div>
+              <p class="text-xs text-cyan-300 uppercase tracking-[0.18em]">${session.type}</p>
+              <h3 class="text-xl font-black mt-2 group-hover:text-cyan-100 transition">${session.title}</h3>
+            </div>
+
+            <span class="px-3 py-1 rounded-full bg-emerald-400/10 border border-emerald-300/20 text-emerald-300 text-xs">
+              ${session.places} places
+            </span>
+          </div>
+
+          <div class="space-y-2 text-sm text-slate-400 mb-5">
+            <p>Date: <span class="text-slate-200">${session.date}</span></p>
+            <p>Time: <span class="text-slate-200">${session.time}</span></p>
+            <p>Coach: <span class="text-slate-200">${session.coach}</span></p>
+            <p>Intensity: <span class="text-slate-200">${session.intensity}</span></p>
+          </div>
+
+          <button onclick="selectSession('${session.id}')"
+            class="w-full px-4 py-3 rounded-2xl bg-slate-100 text-slate-950 hover:bg-white transition font-bold">
+            Select training session
+          </button>
+        </article>
+      `;
+    }
+
+    function reservationsPanel() {
+      const reservations = state.member?.reservations || [];
+
+      return `
+        <section class="mt-10">
+          <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5">
+            <div>
+              <p class="text-violet-300 text-sm font-semibold mb-2">System displays reservation in member account</p>
+              <h3 class="text-3xl font-black">My reservations</h3>
+            </div>
+
+            <span class="text-sm text-slate-500">
+              ${reservations.length} reservation${reservations.length === 1 ? "" : "s"}
+            </span>
+          </div>
+
+          ${reservations.length === 0 ? `
+            <div class="glass rounded-[2rem] p-6 text-slate-400">
+              No reservations yet. After confirmation, the reservation will appear here.
+            </div>
+          ` : `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              ${reservations.map(r => `
+                <div class="glass rounded-[2rem] p-5 border-emerald-300/20">
+                  <div class="flex items-start justify-between gap-4">
+                    <div>
+                      <p class="text-sm text-emerald-300 mb-1">Confirmed reservation</p>
+                      <h4 class="text-xl font-black">${r.title}</h4>
+                    </div>
+                    <span class="px-3 py-1 rounded-full bg-emerald-400/10 border border-emerald-300/20 text-emerald-300 text-xs">
+                      Active
+                    </span>
+                  </div>
+
+                  <div class="mt-4 space-y-1 text-sm text-slate-400">
+                    <p>Date: <span class="text-slate-200">${r.date}</span></p>
+                    <p>Time: <span class="text-slate-200">${r.time}</span></p>
+                    <p>Coach: <span class="text-slate-200">${r.coach}</span></p>
+                    <p>Reservation ID: <span class="text-slate-200">${r.id}</span></p>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          `}
+        </section>
+      `;
+    }
+
+    function renderDetails() {
+      const s = state.selectedSession;
+
+      shell(`
+        <div class="max-w-4xl">
+          <button onclick="returnToSessions()" class="text-sm text-slate-400 hover:text-cyan-200 mb-6 transition">
+            ← Back to available sessions
+          </button>
+
+          <p class="text-cyan-300 text-sm font-semibold mb-2">System displays session details with confirmation message</p>
+          <h2 class="text-4xl md:text-5xl font-black mb-4">${s.title}</h2>
+
+          <p class="text-slate-400 mb-8 max-w-3xl">${s.description}</p>
+
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+            ${infoBox("Type", s.type)}
+            ${infoBox("Date", s.date)}
+            ${infoBox("Time", s.time)}
+            ${infoBox("Coach", s.coach)}
+            ${infoBox("Places", s.places)}
+          </div>
+
+          <div class="glass rounded-[2rem] p-6 mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+              <div>
+                <h3 class="text-2xl font-black mb-2">Reservation confirmed?</h3>
+                <p class="text-slate-400">
+                  If no, the system returns to available training sessions.
+                  If yes, the system registers the reservation.
+                </p>
+              </div>
+
+              <div class="px-4 py-2 rounded-2xl bg-cyan-400/10 border border-cyan-300/20 text-cyan-200 text-sm">
+                Final decision gateway
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-3">
+            <button onclick="confirmReservation()"
+              class="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 transition font-bold shadow-greenGlow">
+              Yes, confirm reservation
+            </button>
+
+            <button onclick="returnToSessions()"
+              class="px-6 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-700 transition font-bold">
+              No, return to sessions
+            </button>
+          </div>
+        </div>
+      `, 8);
+    }
+
+    function infoBox(label, value) {
+      return `
+        <div class="glass rounded-2xl p-4">
+          <p class="text-xs text-slate-500 mb-1 uppercase tracking-[0.16em]">${label}</p>
+          <p class="font-bold">${value}</p>
+        </div>
+      `;
+    }
+
+    function renderEnd() {
+      shell(`
+        <div class="max-w-2xl">
+          <div class="w-16 h-16 rounded-3xl bg-slate-700/60 border border-slate-600 flex items-center justify-center text-3xl mb-6">
+            ×
+          </div>
+
+          <p class="text-slate-400 text-sm font-semibold mb-2">End — Reservation not created</p>
+          <h2 class="text-4xl font-black mb-4">Process ended</h2>
+
+          <p class="text-slate-400 mb-8">${state.endMessage}</p>
+
+          <button onclick="resetDemo()"
+            class="px-6 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 transition font-bold shadow-glow">
+            Start again
+          </button>
+        </div>
+      `, 5);
+    }
+
+    render();
+  </script>
+</body>
+</html>
