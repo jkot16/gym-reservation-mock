@@ -255,7 +255,8 @@
       selectedSession: null,
       reservation: null,
       endMessage: "",
-      justConfirmed: false
+      justConfirmed: false,
+      toast: ""
     };
 
     const app = document.getElementById("app");
@@ -270,7 +271,8 @@
         selectedSession: null,
         reservation: null,
         endMessage: "",
-        justConfirmed: false
+        justConfirmed: false,
+        toast: ""
       };
 
       render();
@@ -307,11 +309,6 @@
       }
 
       render();
-    }
-
-    function quickLogin(id) {
-      document.getElementById("memberIdInput").value = id;
-      validateMember();
     }
 
     function goToPayment() {
@@ -360,13 +357,24 @@
       state.selectedSession = null;
       state.justConfirmed = true;
       state.screen = "sessions";
-      render();
+
+      showToast("Confirmation notification sent");
     }
 
     function endProcess(message) {
       state.endMessage = message;
       state.screen = "end";
       render();
+    }
+
+    function showToast(message) {
+      state.toast = message;
+      render();
+
+      setTimeout(() => {
+        state.toast = "";
+        render();
+      }, 2600);
     }
 
     function render() {
@@ -406,10 +414,6 @@
                 <button onclick="resetDemo()" class="px-4 py-2 rounded-2xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-sm transition">
                   Reset demo
                 </button>
-
-                <div class="px-4 py-2 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 text-emerald-200 text-sm">
-                  Online process simulation
-                </div>
               </div>
             </header>
 
@@ -422,6 +426,20 @@
               </main>
             </div>
           </div>
+
+          ${state.toast ? `
+            <div class="fixed top-6 right-6 z-[9999] fade">
+              <div class="glass rounded-2xl px-5 py-4 border border-emerald-300/25 bg-emerald-500/10 shadow-greenGlow flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-400/15 border border-emerald-300/20 flex items-center justify-center text-emerald-300 font-bold">
+                  ✓
+                </div>
+                <div>
+                  <p class="text-emerald-300 text-sm font-semibold">${state.toast}</p>
+                  <p class="text-slate-400 text-xs">The member received reservation confirmation.</p>
+                </div>
+              </div>
+            </div>
+          ` : ""}
         </div>
       `;
     }
@@ -537,9 +555,6 @@
           <div class="mb-8">
             <p class="text-cyan-300 text-sm font-semibold mb-2">Start — Member wants to reserve a training session online</p>
             <h2 class="text-4xl md:text-5xl font-black mb-4">Enter MemberID</h2>
-            <p class="text-slate-400 max-w-2xl">
-              The member opens the reservation portal and enters MemberID. The system then validates member data and checks membership status.
-            </p>
           </div>
 
           <div class="glass scan-card rounded-[2rem] p-6 max-w-xl">
@@ -547,27 +562,13 @@
 
             <input
               id="memberIdInput"
-              placeholder="Try M001 or M002"
+              placeholder="Enter MemberID"
               class="w-full px-5 py-4 rounded-2xl bg-slate-950/80 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-100 placeholder:text-slate-600"
             />
 
             <button onclick="validateMember()"
               class="mt-4 w-full px-5 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 transition font-bold shadow-glow">
               Continue
-            </button>
-          </div>
-
-          <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
-            <button onclick="quickLogin('M001')"
-              class="group p-5 rounded-[1.5rem] bg-emerald-500/10 border border-emerald-400/20 text-left hover:bg-emerald-500/15 transition">
-              <p class="font-bold text-emerald-200 group-hover:text-emerald-100">Use active member</p>
-              <p class="text-sm text-slate-400 mt-1">M001 — goes directly to available sessions</p>
-            </button>
-
-            <button onclick="quickLogin('M002')"
-              class="group p-5 rounded-[1.5rem] bg-amber-500/10 border border-amber-400/20 text-left hover:bg-amber-500/15 transition">
-              <p class="font-bold text-amber-200 group-hover:text-amber-100">Use inactive member</p>
-              <p class="text-sm text-slate-400 mt-1">M002 — goes through membership renewal</p>
             </button>
           </div>
         </div>
