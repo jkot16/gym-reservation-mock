@@ -393,14 +393,6 @@
           <div class="max-w-7xl mx-auto relative z-10">
             <header class="mb-8 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
               <div>
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-400/10 border border-cyan-300/20 text-cyan-200 text-xs mb-4">
-                  <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
-                  </span>
-                  BPMN-based interactive mock website
-                </div>
-
                 <h1 class="text-4xl md:text-6xl font-black tracking-tight neon-text">
                   Gym Reservation System
                 </h1>
@@ -553,7 +545,6 @@
       shell(`
         <div class="max-w-3xl">
           <div class="mb-8">
-            <p class="text-cyan-300 text-sm font-semibold mb-2">Start — Member wants to reserve a training session online</p>
             <h2 class="text-4xl md:text-5xl font-black mb-4">Enter MemberID</h2>
           </div>
 
@@ -582,12 +573,7 @@
             !
           </div>
 
-          <p class="text-red-300 text-sm font-semibold mb-2">Gateway — MemberID valid? No</p>
-          <h2 class="text-4xl font-black mb-4">Invalid MemberID</h2>
-
-          <p class="text-slate-400 mb-8">
-            The system displays invalid MemberID message. The member must enter MemberID again.
-          </p>
+          <h2 class="text-4xl font-black mb-8">Invalid MemberID</h2>
 
           <button onclick="goToLogin()"
             class="px-6 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 transition font-bold shadow-glow">
@@ -604,21 +590,12 @@
             !
           </div>
 
-          <p class="text-amber-300 text-sm font-semibold mb-2">Gateway — Membership active? No</p>
-          <h2 class="text-4xl font-black mb-4">Inactive membership</h2>
-
-          <p class="text-slate-400 mb-8 max-w-2xl">
-            The system displays inactive membership message and shows membership renewal option.
-          </p>
+          <h2 class="text-4xl font-black mb-8">Inactive membership</h2>
 
           <div class="glass rounded-[2rem] p-6 mb-6">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
               <div>
                 <h3 class="text-2xl font-bold mb-2">Buy membership?</h3>
-                <p class="text-slate-400">
-                  If the member chooses no, the process ends and reservation is not created.
-                  If the member chooses yes, the member pays for membership.
-                </p>
               </div>
 
               <div class="text-right">
@@ -646,12 +623,7 @@
     function renderPayment() {
       shell(`
         <div class="max-w-3xl">
-          <p class="text-emerald-300 text-sm font-semibold mb-2">Member pays for membership</p>
-          <h2 class="text-4xl font-black mb-4">Payment authorization</h2>
-
-          <p class="text-slate-400 mb-8 max-w-2xl">
-            This mock screen represents the payment step. After payment, the system activates renewed membership and continues to available training sessions.
-          </p>
+          <h2 class="text-4xl font-black mb-8">Payment authorization</h2>
 
           <div class="glass rounded-[2rem] p-6 mb-6 max-w-xl">
             <div class="flex justify-between items-center mb-5">
@@ -665,10 +637,6 @@
             <div class="h-2 rounded-full bg-slate-950 overflow-hidden">
               <div class="h-full w-4/5 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400"></div>
             </div>
-
-            <p class="text-xs text-slate-500 mt-4">
-              Payment simulation only — no real transaction is performed.
-            </p>
           </div>
 
           <button onclick="activateMembership()"
@@ -684,19 +652,8 @@
         <div>
           ${state.justConfirmed ? successBanner() : ""}
 
-          <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-5 mb-8">
-            <div>
-              <p class="text-cyan-300 text-sm font-semibold mb-2">System displays available training sessions</p>
-              <h2 class="text-4xl font-black mb-3">Available sessions</h2>
-              <p class="text-slate-400 max-w-2xl">
-                The member selects a training session from the list displayed by the system.
-              </p>
-            </div>
-
-            <div class="glass rounded-2xl px-4 py-3">
-              <p class="text-xs text-slate-500 uppercase tracking-[0.18em]">Account status</p>
-              <p class="text-emerald-300 font-bold">Ready to reserve</p>
-            </div>
+          <div class="mb-8">
+            <h2 class="text-4xl font-black mb-3">Available sessions</h2>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
@@ -706,23 +663,14 @@
           ${reservationsPanel()}
         </div>
       `, state.justConfirmed ? 11 : 6);
-    }
+}
 
     function successBanner() {
       return `
         <div class="mb-8 rounded-[2rem] border border-emerald-300/25 bg-emerald-400/10 p-6 shadow-greenGlow fade">
-          <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-            <div>
-              <p class="text-emerald-300 text-sm font-semibold mb-2">End — Reservation confirmed</p>
-              <h3 class="text-2xl font-black">Confirmation notification sent</h3>
-              <p class="text-slate-300 mt-2">
-                The system registered the reservation, sent a confirmation notification and displayed it in the member account.
-              </p>
-            </div>
-
-            <span class="px-3 py-1 rounded-full bg-emerald-400/10 border border-emerald-300/20 text-emerald-300 text-xs w-fit">
-              BPMN completed
-            </span>
+          <div>
+            <p class="text-emerald-300 text-sm font-semibold mb-2">End — Reservation confirmed</p>
+            <h3 class="text-2xl font-black">Confirmation notification sent</h3>
           </div>
         </div>
       `;
@@ -731,15 +679,9 @@
     function sessionCard(session) {
       return `
         <article class="glass rounded-[2rem] p-5 hover:border-cyan-300/35 hover:shadow-glow transition group">
-          <div class="flex items-start justify-between gap-4 mb-5">
-            <div>
-              <p class="text-xs text-cyan-300 uppercase tracking-[0.18em]">${session.type}</p>
-              <h3 class="text-xl font-black mt-2 group-hover:text-cyan-100 transition">${session.title}</h3>
-            </div>
-
-            <span class="px-3 py-1 rounded-full bg-emerald-400/10 border border-emerald-300/20 text-emerald-300 text-xs">
-              ${session.places} places
-            </span>
+          <div class="mb-5">
+            <p class="text-xs text-cyan-300 uppercase tracking-[0.18em]">${session.type}</p>
+            <h3 class="text-xl font-black mt-2 group-hover:text-cyan-100 transition">${session.title}</h3>
           </div>
 
           <div class="space-y-2 text-sm text-slate-400 mb-5">
@@ -754,8 +696,8 @@
             Select training session
           </button>
         </article>
-      `;
-    }
+  `;
+}
 
     function reservationsPanel() {
       const reservations = state.member?.reservations || [];
@@ -764,7 +706,6 @@
         <section class="mt-10">
           <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5">
             <div>
-              <p class="text-violet-300 text-sm font-semibold mb-2">System displays reservation in member account</p>
               <h3 class="text-3xl font-black">My reservations</h3>
             </div>
 
@@ -814,7 +755,6 @@
             ← Back to available sessions
           </button>
 
-          <p class="text-cyan-300 text-sm font-semibold mb-2">System displays session details with confirmation message</p>
           <h2 class="text-4xl md:text-5xl font-black mb-4">${s.title}</h2>
 
           <p class="text-slate-400 mb-8 max-w-3xl">${s.description}</p>
@@ -831,14 +771,6 @@
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
               <div>
                 <h3 class="text-2xl font-black mb-2">Reservation confirmed?</h3>
-                <p class="text-slate-400">
-                  If no, the system returns to available training sessions.
-                  If yes, the system registers the reservation.
-                </p>
-              </div>
-
-              <div class="px-4 py-2 rounded-2xl bg-cyan-400/10 border border-cyan-300/20 text-cyan-200 text-sm">
-                Final decision gateway
               </div>
             </div>
           </div>
